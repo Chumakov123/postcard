@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Селфи‑открытка</title>
+    <!-- canvas-confetti с CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
+            background: linear-gradient(145deg, #f9f3e6 0%, #ffe9ce 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .card {
+            max-width: 700px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(8px);
+            border-radius: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2), 0 4px 12px rgba(0,0,0,0.1);
+            padding: 30px 25px;
+            transition: all 0.2s;
+        }
+        h1, h2 {
+            font-weight: 500;
+            color: #4a2f1a;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        h1 {
+            font-size: 2.2rem;
+            letter-spacing: -0.5px;
+        }
+        h2 {
+            font-size: 1.8rem;
+        }
+        .creator-panel, .card-panel {
+            display: none;
+            flex-direction: column;
+            gap: 20px;
+        }
+        body.mode-creator .creator-panel {
+            display: flex;
+        }
+        body.mode-card .card-panel {
+            display: flex;
+        }
+
+        label {
+            font-weight: 600;
+            color: #5a3e28;
+            margin-bottom: 5px;
+            font-size: 0.95rem;
+        }
+        input, textarea, select {
+            width: 100%;
+            padding: 14px 18px;
+            border: 2px solid transparent;
+            border-radius: 30px;
+            font-size: 1rem;
+            background: white;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            transition: 0.2s;
+            font-family: inherit;
+        }
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #c89f6e;
+            box-shadow: 0 8px 12px rgba(200, 159, 110, 0.2);
+        }
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        .btn {
+            background: #c89f6e;
+            color: white;
+            border: none;
+            padding: 14px 24px;
+            border-radius: 40px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 8px 16px rgba(200, 159, 110, 0.3);
+            border: 1px solid rgba(255,255,255,0.3);
+            width: fit-content;
+            margin: 0 auto;
+        }
+        .btn:hover {
+            background: #b48b5a;
+            transform: scale(1.02);
+            box-shadow: 0 12px 20px rgba(180, 139, 90, 0.4);
+        }
+        .btn.secondary {
+            background: #e6d5b8;
+            color: #4a2f1a;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .btn.secondary:hover {
+            background: #dac29c;
+        }
+
+        .link-area {
+            background: #f2e6d8;
+            padding: 15px;
+            border-radius: 30px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .link-area input {
+            flex: 1;
+            background: white;
+            padding: 12px 16px;
+            border-radius: 40px;
+            border: 1px solid #ddd;
+            font-size: 0.9rem;
+        }
+        .small-btn {
+            background: #c89f6e;
+            border: none;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 40px;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .video-section {
+            display: none; /* полностью скрываем видео, оно нужно только для захвата */
+        }
+        .photo-section {
+            position: relative;
+            width: 100%;
+            border-radius: 30px;
+            overflow: hidden;
+            background: #2d2d2d;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+            margin-bottom: 10px;
+        }
+        video, canvas {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+        .photo-section {
+            display: none; /* показывается только после автоснимка */
+        }
+        .message-display {
+            background: #fff5e6;
+            padding: 20px;
+            border-radius: 30px;
+            font-size: 1.4rem;
+            text-align: center;
+            font-style: italic;
+            color: #3b2c1c;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+            word-break: break-word;
+        }
+        .error-message {
+            color: #b34a4a;
+            background: #ffe2e2;
+            padding: 15px;
+            border-radius: 30px;
+            text-align: center;
+            font-weight: 500;
+        }
+        .hint-message {
+            color: #8b7355;
+            background: #fff0d4;
+            padding: 15px;
+            border-radius: 30px;
+            text-align: center;
+            font-weight: 500;
+            margin-bottom: 10px;
+        }
+        audio {
+            width: 100%;
+            border-radius: 30px;
+            margin-top: 10px;
+        }
+        .btn-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+        }
+        .footer-note {
+            text-align: center;
+            color: #8b7355;
+            font-size: 0.9rem;
+        }
+        /* Стили для панели эмодзи (горизонтальный скролл) */
+        .emoji-panel {
+            display: flex;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            gap: 8px;
+            padding: 10px 0;
+            margin-top: 5px;
+            margin-bottom: 5px;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: thin;
+            scrollbar-color: #c89f6e #f2e6d8;
+        }
+        .emoji-panel::-webkit-scrollbar {
+            height: 6px;
+        }
+        .emoji-panel::-webkit-scrollbar-track {
+            background: #f2e6d8;
+            border-radius: 10px;
+        }
+        .emoji-panel::-webkit-scrollbar-thumb {
+            background: #c89f6e;
+            border-radius: 10px;
+        }
+        .emoji-btn {
+            background: #fff;
+            border: none;
+            font-size: 1.8rem;
+            padding: 8px 12px;
+            border-radius: 30px;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            transition: 0.2s;
+            line-height: 1;
+            flex-shrink: 0;
+        }
+        .emoji-btn:hover {
+            background: #ffe9ce;
+            transform: scale(1.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <!-- Режим создания открытки -->
+        <div class="creator-panel">
+            <h1>✨ Создай свою открытку ✨</h1>
+            <label for="message">Поздравление</label>
+            <textarea id="message" placeholder="Например: С днём рождения! Желаю счастья..."></textarea>
+            
+            <!-- Панель с большим количеством эмодзи (горизонтальная прокрутка) -->
+            <div class="emoji-panel" id="emojiPanel">
+                <!-- Смайлики и эмоции -->
+                <button class="emoji-btn" data-emoji="😊">😊</button>
+                <button class="emoji-btn" data-emoji="😍">😍</button>
+                <button class="emoji-btn" data-emoji="🥰">🥰</button>
+                <button class="emoji-btn" data-emoji="😘">😘</button>
+                <button class="emoji-btn" data-emoji="😎">😎</button>
+                <button class="emoji-btn" data-emoji="🤩">🤩</button>
+                <button class="emoji-btn" data-emoji="🥳">🥳</button>
+                <button class="emoji-btn" data-emoji="😢">😢</button>
+                <button class="emoji-btn" data-emoji="😭">😭</button>
+                <button class="emoji-btn" data-emoji="😂">😂</button>
+                <button class="emoji-btn" data-emoji="🤣">🤣</button>
+                <button class="emoji-btn" data-emoji="😅">😅</button>
+                <button class="emoji-btn" data-emoji="😉">😉</button>
+                <button class="emoji-btn" data-emoji="🤔">🤔</button>
+                <button class="emoji-btn" data-emoji="🤗">🤗</button>
+                <button class="emoji-btn" data-emoji="🤭">🤭</button>
+                <button class="emoji-btn" data-emoji="🤫">🤫</button>
+                <button class="emoji-btn" data-emoji="😴">😴</button>
+                <button class="emoji-btn" data-emoji="😈">😈</button>
+                <button class="emoji-btn" data-emoji="👻">👻</button>
+                <!-- Праздничные и символы -->
+                <button class="emoji-btn" data-emoji="🎉">🎉</button>
+                <button class="emoji-btn" data-emoji="🎊">🎊</button>
+                <button class="emoji-btn" data-emoji="🎂">🎂</button>
+                <button class="emoji-btn" data-emoji="🍰">🍰</button>
+                <button class="emoji-btn" data-emoji="🍾">🍾</button>
+                <button class="emoji-btn" data-emoji="🥂">🥂</button>
+                <button class="emoji-btn" data-emoji="🎈">🎈</button>
+                <button class="emoji-btn" data-emoji="🎁">🎁</button>
+                <button class="emoji-btn" data-emoji="✨">✨</button>
+                <button class="emoji-btn" data-emoji="⭐">⭐</button>
+                <button class="emoji-btn" data-emoji="🌟">🌟</button>
+                <button class="emoji-btn" data-emoji="💫">💫</button>
+                <button class="emoji-btn" data-emoji="🔥">🔥</button>
+                <button class="emoji-btn" data-emoji="💥">💥</button>
+                <button class="emoji-btn" data-emoji="💯">💯</button>
+                <!-- Сердечки -->
+                <button class="emoji-btn" data-emoji="❤️">❤️</button>
+                <button class="emoji-btn" data-emoji="🧡">🧡</button>
+                <button class="emoji-btn" data-emoji="💛">💛</button>
+                <button class="emoji-btn" data-emoji="💚">💚</button>
+                <button class="emoji-btn" data-emoji="💙">💙</button>
+                <button class="emoji-btn" data-emoji="💜">💜</button>
+                <button class="emoji-btn" data-emoji="🖤">🖤</button>
+                <button class="emoji-btn" data-emoji="🤍">🤍</button>
+                <button class="emoji-btn" data-emoji="💔">💔</button>
+                <button class="emoji-btn" data-emoji="💖">💖</button>
+                <button class="emoji-btn" data-emoji="💝">💝</button>
+                <button class="emoji-btn" data-emoji="💞">💞</button>
+                <!-- Животные и природа -->
+                <button class="emoji-btn" data-emoji="🐶">🐶</button>
+                <button class="emoji-btn" data-emoji="🐱">🐱</button>
+                <button class="emoji-btn" data-emoji="🐼">🐼</button>
+                <button class="emoji-btn" data-emoji="🐨">🐨</button>
+                <button class="emoji-btn" data-emoji="🦊">🦊</button>
+                <button class="emoji-btn" data-emoji="🐸">🐸</button>
+                <button class="emoji-btn" data-emoji="🐧">🐧</button>
+                <button class="emoji-btn" data-emoji="🐤">🐤</button>
+                <button class="emoji-btn" data-emoji="🐣">🐣</button>
+                <button class="emoji-btn" data-emoji="🦄">🦄</button>
+                <button class="emoji-btn" data-emoji="🐝">🐝</button>
+                <button class="emoji-btn" data-emoji="🌸">🌸</button>
+                <button class="emoji-btn" data-emoji="🌺">🌺</button>
+                <button class="emoji-btn" data-emoji="🌻">🌻</button>
+                <button class="emoji-btn" data-emoji="🌿">🌿</button>
+                <button class="emoji-btn" data-emoji="🍀">🍀</button>
+                <!-- Еда -->
+                <button class="emoji-btn" data-emoji="🍕">🍕</button>
+                <button class="emoji-btn" data-emoji="🍔">🍔</button>
+                <button class="emoji-btn" data-emoji="🍟">🍟</button>
+                <button class="emoji-btn" data-emoji="🌭">🌭</button>
+                <button class="emoji-btn" data-emoji="🍣">🍣</button>
+                <button class="emoji-btn" data-emoji="🍦">🍦</button>
+                <button class="emoji-btn" data-emoji="🍩">🍩</button>
+                <button class="emoji-btn" data-emoji="🍪">🍪</button>
+                <button class="emoji-btn" data-emoji="☕">☕</button>
+                <!-- Разное -->
+                <button class="emoji-btn" data-emoji="👍">👍</button>
+                <button class="emoji-btn" data-emoji="👎">👎</button>
+                <button class="emoji-btn" data-emoji="👏">👏</button>
+                <button class="emoji-btn" data-emoji="🙌">🙌</button>
+                <button class="emoji-btn" data-emoji="🤝">🤝</button>
+                <button class="emoji-btn" data-emoji="👊">👊</button>
+                <button class="emoji-btn" data-emoji="✌️">✌️</button>
+                <button class="emoji-btn" data-emoji="💪">💪</button>
+                <button class="emoji-btn" data-emoji="👀">👀</button>
+                <button class="emoji-btn" data-emoji="👅">👅</button>
+                <button class="emoji-btn" data-emoji="💋">💋</button>
+            </div>
+
+            <label for="effect">Эффект при селфи</label>
+            <select id="effect">
+                <option value="confetti" selected>🎉 Конфетти</option>
+                <option value="fireworks">🎆 Фейерверк</option>
+                <option value="stars">⭐ Звёзды</option>
+            </select>
+
+            <label for="music">Ссылка на песню (необязательно)</label>
+            <input type="url" id="music" placeholder="https://example.com/song.mp3">
+
+            <button class="btn" id="generateLink">🔗 Создать открытку</button>
+
+            <div class="link-area" id="linkContainer" style="display: none;">
+                <input type="text" id="generatedLink" readonly>
+                <button class="small-btn" id="copyLink">📋 Копировать</button>
+            </div>
+
+            <button class="btn secondary" id="goToCardFromCreator" style="display: none;">🎴 Перейти к открытке</button>
+        </div>
+
+        <!-- Режим просмотра открытки -->
+        <div class="card-panel">
+            <h2>💌 Вам открытка</h2>
+            <div class="message-display" id="cardMessage"></div>
+
+            <!-- Видео скрыто, используется только для захвата -->
+            <div class="video-section">
+                <video id="video" autoplay playsinline></video>
+            </div>
+
+            <!-- Подсказка перед запросом камеры -->
+            <div id="cameraHint" class="hint-message" style="display: none;">Предоставьте доступ к камере, чтобы товарищ майор мог лучше вас разглядеть</div>
+
+            <!-- Блок ошибки камеры -->
+            <div id="cameraError" class="error-message" style="display: none;"></div>
+
+            <!-- Сделанное фото (появляется после автоснимка) -->
+            <div class="photo-section" id="photoSection">
+                <canvas id="photoCanvas"></canvas>
+            </div>
+
+            <!-- Аудиоплеер (появится, если есть music) -->
+            <div id="audioContainer"></div>
+
+            <!-- <div class="btn-group">
+                <button class="btn secondary" id="retakePhotoBtn" style="display: none;">🔄 Сделать новое селфи</button>
+            </div> -->
+
+            <button class="btn secondary" id="backToCreatorBtn">💝 Сделать открытку</button>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            // --- Элементы DOM ---
+            const body = document.body;
+            const creatorPanel = document.querySelector('.creator-panel');
+            const cardPanel = document.querySelector('.card-panel');
+
+            // Элементы режима создания
+            const messageInput = document.getElementById('message');
+            const effectSelect = document.getElementById('effect');
+            const musicInput = document.getElementById('music');
+            const generateBtn = document.getElementById('generateLink');
+            const linkContainer = document.getElementById('linkContainer');
+            const generatedLinkInput = document.getElementById('generatedLink');
+            const copyBtn = document.getElementById('copyLink');
+            const goToCardBtn = document.getElementById('goToCardFromCreator');
+
+            // Элементы режима открытки
+            const cardMessageDiv = document.getElementById('cardMessage');
+            const video = document.getElementById('video');
+            const photoSection = document.getElementById('photoSection');
+            const photoCanvas = document.getElementById('photoCanvas');
+            const cameraHint = document.getElementById('cameraHint');
+            const cameraErrorDiv = document.getElementById('cameraError');
+            const audioContainer = document.getElementById('audioContainer');
+            const retakePhotoBtn = document.getElementById('retakePhotoBtn');
+            const backToCreatorBtn = document.getElementById('backToCreatorBtn');
+
+            // --- Состояние ---
+            let currentStream = null;
+            let effectParam = 'confetti';
+            let musicParam = '';
+            let effectInterval = null;   // для постоянного эффекта
+            let autoPhotoTaken = false;  // флаг для предотвращения двойного автоснимка
+
+            // --- Чтение параметров URL ---
+            function getUrlParams() {
+                const params = new URLSearchParams(window.location.search);
+                return {
+                    message: params.get('message') || '',
+                    effect: params.get('effect') || 'confetti',
+                    music: params.get('music') || ''
+                };
+            }
+
+            // --- Установка режима страницы ---
+            function setMode(mode) {
+                if (mode === 'creator') {
+                    body.classList.remove('mode-card');
+                    body.classList.add('mode-creator');
+                } else {
+                    body.classList.remove('mode-creator');
+                    body.classList.add('mode-card');
+                }
+            }
+
+            // --- Остановка камеры ---
+            function stopCamera() {
+                if (currentStream) {
+                    currentStream.getTracks().forEach(track => track.stop());
+                    currentStream = null;
+                }
+            }
+
+            // --- Остановка постоянного эффекта ---
+            function stopEffect() {
+                if (effectInterval) {
+                    clearInterval(effectInterval);
+                    effectInterval = null;
+                }
+            }
+
+            // --- Запуск постоянного эффекта: конфетти сверху + случайные взрывы ---
+            function startContinuousEffect(effectType) {
+                stopEffect(); // остановить предыдущий
+
+                // Вспомогательная функция для вызова confetti с случайным x
+                const fire = (options = {}) => {
+                    confetti({
+                        ...options,
+                        origin: {
+                            x: options.origin?.x ?? Math.random(), // случайный x, если не задан
+                            y: options.origin?.y ?? 0
+                        },
+                        spread: options.spread || 100,
+                    });
+                };
+
+                switch (effectType) {
+                    case 'fireworks':
+                        // Каждые 400 мс: один залп сверху, один взрыв в случайном месте
+                        effectInterval = setInterval(() => {
+                            // сверху
+                            fire({
+                                particleCount: 30,
+                                spread: 90,
+                                startVelocity: 35,
+                                colors: ['#ff4d4d', '#ff9f4d', '#ffff4d', '#4dff4d', '#4dffff', '#4d4dff'],
+                                origin: { y: 0 }
+                            });
+                            // случайный взрыв
+                            fire({
+                                particleCount: 60,
+                                spread: 120,
+                                startVelocity: 40,
+                                colors: ['#ff4d4d', '#ff9f4d', '#ffff4d', '#4dff4d', '#4dffff', '#4d4dff'],
+                                origin: { y: 0.2 + Math.random() * 0.6 } // в центре или нижней части
+                            });
+                        }, 400);
+                        break;
+                    case 'stars':
+                        effectInterval = setInterval(() => {
+                            // мерцающие звёзды сверху
+                            fire({
+                                particleCount: 20,
+                                spread: 80,
+                                colors: ['#FFE55C', '#FFD700', '#FFFFFF', '#B0E0E6'],
+                                shapes: ['circle'],
+                                startVelocity: 15,
+                                gravity: 0.2,
+                                origin: { y: 0 }
+                            });
+                            // вспышка звёзд в случайном месте
+                            fire({
+                                particleCount: 40,
+                                spread: 100,
+                                colors: ['#FFE55C', '#FFD700', '#FFFFFF', '#B0E0E6'],
+                                shapes: ['circle'],
+                                startVelocity: 25,
+                                gravity: 0.4,
+                                origin: { y: 0.2 + Math.random() * 0.6 }
+                            });
+                        }, 300);
+                        break;
+                    case 'confetti':
+                    default:
+                        effectInterval = setInterval(() => {
+                            // обычное конфетти сверху
+                            fire({
+                                particleCount: 40,
+                                spread: 80,
+                                colors: ['#f2d74e', '#95c3fa', '#ff9a9a', '#b0f0b0', '#d8b4ff'],
+                                startVelocity: 25,
+                                gravity: 0.5,
+                                origin: { y: 0 }
+                            });
+                            // дополнительная вспышка конфетти в случайном месте
+                            fire({
+                                particleCount: 30,
+                                spread: 110,
+                                colors: ['#f2d74e', '#95c3fa', '#ff9a9a', '#b0f0b0', '#d8b4ff'],
+                                startVelocity: 30,
+                                gravity: 0.7,
+                                origin: { y: 0.2 + Math.random() * 0.6 }
+                            });
+                        }, 300);
+                        break;
+                }
+            }
+
+            // --- Захват фото с видео и переключение на фото-режим ---
+            function takePhoto() {
+                if (!video.videoWidth) return;
+
+                const ctx = photoCanvas.getContext('2d');
+                photoCanvas.width = video.videoWidth;
+                photoCanvas.height = video.videoHeight;
+                ctx.drawImage(video, 0, 0, photoCanvas.width, photoCanvas.height);
+
+                // Показываем фото
+                photoSection.style.display = 'block';
+                retakePhotoBtn.style.display = 'inline-block';
+
+                // Запускаем постоянный эффект (сверху + взрывы)
+                startContinuousEffect(effectParam);
+            }
+
+            // --- Подготовка к повторному селфи ---
+            function retakePhoto() {
+                // Останавливаем эффект, скрываем фото
+                stopEffect();
+                photoSection.style.display = 'none';
+                retakePhotoBtn.style.display = 'none';
+                autoPhotoTaken = false; // разрешаем новый автоснимок
+
+                // Видео должно быть активно, но если поток пропал – перезапустим камеру
+                if (!currentStream || !currentStream.active) {
+                    startCamera().then(() => waitForVideoAndTakePhoto());
+                } else {
+                    waitForVideoAndTakePhoto();
+                }
+            }
+
+            // --- Ожидание готовности видео и автоснимок ---
+            function waitForVideoAndTakePhoto() {
+                if (video.videoWidth > 0 && video.videoHeight > 0) {
+                    if (!autoPhotoTaken) {
+                        takePhoto();
+                        autoPhotoTaken = true;
+                    }
+                } else {
+                    video.addEventListener('loadeddata', function onLoaded() {
+                        video.removeEventListener('loadeddata', onLoaded);
+                        if (!autoPhotoTaken) {
+                            setTimeout(() => {
+                                takePhoto();
+                                autoPhotoTaken = true;
+                            }, 100);
+                        }
+                    });
+                }
+            }
+
+            // --- Запуск камеры (видео скрыто) ---
+            async function startCamera() {
+                stopCamera();
+                // Показываем подсказку перед запросом
+                cameraHint.style.display = 'block';
+                cameraErrorDiv.style.display = 'none';
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+                    currentStream = stream;
+                    video.srcObject = stream;
+                    // Камера получена – подсказку убираем
+                    cameraHint.style.display = 'none';
+                } catch (err) {
+                    console.error('Ошибка камеры:', err);
+                    cameraErrorDiv.style.display = 'block';
+                    cameraErrorDiv.textContent = 'Не удалось получить доступ к камере. Проверьте разрешения.';
+                    cameraHint.style.display = 'none'; // подсказку тоже убираем
+                }
+            }
+
+            // --- Функция для попытки автоматического воспроизведения музыки ---
+            function tryAutoplayAudio(audioElement) {
+                if (!audioElement) return;
+                setTimeout(() => {
+                    audioElement.play().catch(e => {
+                        console.log('Autoplay не сработал (пользователь должен нажать вручную):', e);
+                    });
+                }, 300);
+            }
+
+            // --- Инициализация страницы открытки ---
+            async function initCardMode() {
+                const params = getUrlParams();
+                cardMessageDiv.textContent = params.message || 'Поздравляю!';
+                effectParam = params.effect;
+                musicParam = params.music;
+
+                // Плеер для музыки с autoplay
+                audioContainer.innerHTML = '';
+                if (musicParam) {
+                    const audio = document.createElement('audio');
+                    audio.controls = true;
+                    audio.autoplay = true;
+                    audio.src = musicParam;
+                    audioContainer.appendChild(audio);
+                    tryAutoplayAudio(audio);
+                }
+
+                // Сброс UI
+                photoSection.style.display = 'none';
+                retakePhotoBtn.style.display = 'none';
+                stopEffect();
+                autoPhotoTaken = false;
+                cameraHint.style.display = 'none';
+                cameraErrorDiv.style.display = 'none';
+
+                // Запускаем камеру (видео скрыто)
+                await startCamera();
+
+                // Если камера запущена, ждём готовности и делаем автоснимок
+                if (cameraErrorDiv.style.display !== 'block') {
+                    waitForVideoAndTakePhoto();
+                }
+            }
+
+            // --- Генерация ссылки в режиме создания ---
+            function generateLink() {
+                const message = messageInput.value.trim();
+                const effect = effectSelect.value;
+                const music = musicInput.value.trim();
+
+                const params = new URLSearchParams();
+                if (message) params.set('message', message);
+                params.set('effect', effect);
+                if (music) params.set('music', music);
+
+                const url = window.location.origin + window.location.pathname + '?' + params.toString();
+                generatedLinkInput.value = url;
+                linkContainer.style.display = 'flex';
+                goToCardBtn.style.display = 'inline-block';
+            }
+
+            // --- Копирование ссылки ---
+            function copyLink() {
+                generatedLinkInput.select();
+                navigator.clipboard?.writeText(generatedLinkInput.value).then(() => {
+                    alert('Ссылка скопирована!');
+                }).catch(() => {
+                    alert('Нажмите Ctrl+C');
+                });
+            }
+
+            // --- Переход к открытке по сгенерированной ссылке ---
+            function goToCard() {
+                if (generatedLinkInput.value) {
+                    window.location.href = generatedLinkInput.value;
+                }
+            }
+
+            // --- Возврат в режим создания (очистка параметров) ---
+            function backToCreator() {
+                stopEffect();
+                stopCamera();
+                window.location.href = window.location.origin + window.location.pathname;
+            }
+
+            // --- Вставка эмодзи в textarea ---
+            function insertEmoji(emoji) {
+                const start = messageInput.selectionStart;
+                const end = messageInput.selectionEnd;
+                const text = messageInput.value;
+                const newText = text.substring(0, start) + emoji + text.substring(end);
+                messageInput.value = newText;
+                // Восстанавливаем позицию курсора после вставленного эмодзи
+                messageInput.selectionStart = messageInput.selectionEnd = start + emoji.length;
+                messageInput.focus();
+            }
+
+            // --- Инициализация при загрузке ---
+            function init() {
+                const params = getUrlParams();
+                if (params.message || params.effect !== 'confetti' || params.music) {
+                    setMode('card');
+                    initCardMode().catch(console.error);
+                } else {
+                    setMode('creator');
+                    messageInput.value = '';
+                    effectSelect.value = 'confetti';
+                    musicInput.value = '';
+                    linkContainer.style.display = 'none';
+                    goToCardBtn.style.display = 'none';
+                }
+
+                // Обработчики для кнопок эмодзи
+                document.querySelectorAll('.emoji-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const emoji = btn.getAttribute('data-emoji');
+                        insertEmoji(emoji);
+                    });
+                });
+            }
+
+            // --- События ---
+            generateBtn.addEventListener('click', generateLink);
+            copyBtn.addEventListener('click', copyLink);
+            goToCardBtn.addEventListener('click', goToCard);
+            backToCreatorBtn.addEventListener('click', backToCreator);
+            retakePhotoBtn.addEventListener('click', retakePhoto);
+
+            // Старт
+            init();
+
+            // При выходе из режима открытки останавливаем всё
+            window.addEventListener('beforeunload', function() {
+                stopEffect();
+                stopCamera();
+            });
+        })();
+    </script>
+</body>
+</html>

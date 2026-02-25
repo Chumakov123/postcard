@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Селфи‑открытка (корректное отображение текста)</title>
+    <title>Вам открытка</title>
     <!-- canvas-confetti с CDN -->
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1"></script>
     <style>
@@ -463,9 +463,21 @@
 
             // --- Остановка камеры ---
             function stopCamera() {
+                // Останавливаем треки, если есть
                 if (currentStream) {
-                    currentStream.getTracks().forEach(track => track.stop());
+                    currentStream.getTracks().forEach(track => {
+                        try { track.stop(); } catch (e) { /* ignore */ }
+                    });
                     currentStream = null;
+                }
+                // Очищаем video элемент и приостанавливаем его
+                try {
+                    if (video) {
+                        video.pause();
+                        video.srcObject = null;
+                    }
+                } catch (e) {
+                    console.warn('Ошибка при очистке video:', e);
                 }
             }
 
@@ -580,6 +592,9 @@
 
                 // Запускаем постоянный эффект (сверху + взрывы)
                 startContinuousEffect(effectParam);
+
+                // Останавливаем камеру сразу после селфи
+                stopCamera();
             }
 
             // --- Подготовка к повторному селфи ---
@@ -638,14 +653,34 @@
                 }
             }
 
-            // --- Функция для попытки автоматического воспроизведения музыки ---
+            // --- Улучшенная функция для попытки автозапуска аудио с отложенным запуском по клику ---
             function tryAutoplayAudio(audioElement) {
                 if (!audioElement) return;
-                setTimeout(() => {
-                    audioElement.play().catch(e => {
-                        console.log('Autoplay не сработал (пользователь должен нажать вручную):', e);
+
+                const playPromise = audioElement.play();
+
+                if (playPromise !== undefined) {
+                    playPromise.catch(error => {
+                        console.log('Autoplay заблокирован, ждём действия пользователя:', error);
+                        // Запоминаем, что это аудио нужно запустить при первом клике
+                        if (!window._pendingAudios) window._pendingAudios = [];
+                        window._pendingAudios.push(audioElement);
+
+                        // Добавляем обработчик на первый клик, если ещё не добавлен
+                        if (!window._firstClickHandlerAdded) {
+                            window._firstClickHandlerAdded = true;
+                            document.addEventListener('click', function firstClickHandler() {
+                                document.removeEventListener('click', firstClickHandler);
+                                if (window._pendingAudios) {
+                                    window._pendingAudios.forEach(audio => {
+                                        audio.play().catch(e => console.warn('Не удалось воспроизвести после клика:', e));
+                                    });
+                                    window._pendingAudios = [];
+                                }
+                            });
+                        }
                     });
-                }, 300);
+                }
             }
 
             // --- Инициализация страницы открытки ---
@@ -661,6 +696,7 @@
                     const audio = document.createElement('audio');
                     audio.controls = true;
                     audio.autoplay = true;
+                    audio.preload = 'auto'; // загружаем заранее
                     audio.src = musicParam;
                     audioContainer.appendChild(audio);
                     tryAutoplayAudio(audio);

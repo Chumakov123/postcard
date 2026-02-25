@@ -423,7 +423,7 @@
             const cameraHint = document.getElementById('cameraHint');
             const cameraErrorDiv = document.getElementById('cameraError');
             const audioContainer = document.getElementById('audioContainer');
-            const retakePhotoBtn = document.getElementById('retakePhotoBtn');
+            //const retakePhotoBtn = document.getElementById('retakePhotoBtn');
             const backToCreatorBtn = document.getElementById('backToCreatorBtn');
 
             // --- Состояние ---
@@ -569,7 +569,7 @@
 
                 // Показываем фото
                 photoSection.style.display = 'block';
-                retakePhotoBtn.style.display = 'inline-block';
+                //retakePhotoBtn.style.display = 'inline-block';
 
                 // Запускаем постоянный эффект (сверху + взрывы)
                 startContinuousEffect(effectParam);
@@ -580,7 +580,7 @@
                 // Останавливаем эффект, скрываем фото
                 stopEffect();
                 photoSection.style.display = 'none';
-                retakePhotoBtn.style.display = 'none';
+                //retakePhotoBtn.style.display = 'none';
                 autoPhotoTaken = false; // разрешаем новый автоснимок
 
                 // Видео должно быть активно, но если поток пропал – перезапустим камеру
@@ -661,7 +661,7 @@
 
                 // Сброс UI
                 photoSection.style.display = 'none';
-                retakePhotoBtn.style.display = 'none';
+                //retakePhotoBtn.style.display = 'none';
                 stopEffect();
                 autoPhotoTaken = false;
                 cameraHint.style.display = 'none';

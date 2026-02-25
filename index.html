@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Селфи‑открытка</title>
+    <title>Селфи‑открытка (корректное отображение текста)</title>
     <!-- canvas-confetti с CDN -->
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1"></script>
     <style>
@@ -433,11 +433,18 @@
             let effectInterval = null;   // для постоянного эффекта
             let autoPhotoTaken = false;  // флаг для предотвращения двойного автоснимка
 
-            // --- Чтение параметров URL ---
+            // --- Чтение параметров URL с ручной заменой + на пробел (для старых браузеров) ---
             function getUrlParams() {
                 const params = new URLSearchParams(window.location.search);
+                // Для message делаем замену + на пробел, т.к. некоторые браузеры не декодируют + автоматически
+                let message = params.get('message');
+                if (message) {
+                    message = message.replace(/\+/g, ' '); // заменяем все + на пробел
+                } else {
+                    message = '';
+                }
                 return {
-                    message: params.get('message') || '',
+                    message: message,
                     effect: params.get('effect') || 'confetti',
                     music: params.get('music') || ''
                 };

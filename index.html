@@ -82,6 +82,23 @@
             min-height: 100px;
             resize: vertical;
         }
+        .checkbox-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 0;
+        }
+        .checkbox-wrapper input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            accent-color: #c89f6e;
+        }
+        .checkbox-wrapper label {
+            margin: 0;
+            cursor: pointer;
+            font-weight: normal;
+        }
         .btn {
             background: #c89f6e;
             color: white;
@@ -269,6 +286,16 @@
         #backToCreatorBtn {
             display: none;
         }
+        .photo-disabled-message {
+            background: #e8f0fe;
+            color: #2c3e50;
+            padding: 20px;
+            border-radius: 30px;
+            text-align: center;
+            font-size: 1.1rem;
+            border: 2px dashed #c89f6e;
+            margin-bottom: 10px;
+        }
     </style>
 </head>
 <body>
@@ -372,6 +399,11 @@
                 <button class="emoji-btn" data-emoji="💋">💋</button>
             </div>
 
+            <div class="checkbox-wrapper">
+                <input type="checkbox" id="enablePhoto" checked>
+                <label for="enablePhoto">📸 Фото-розыгрыш получателя</label>
+            </div>
+
             <label for="effect">Эффект</label>
             <select id="effect">
                 <option value="confetti" selected>🎉 Конфетти</option>
@@ -436,6 +468,7 @@
             const messageInput = document.getElementById('message');
             const effectSelect = document.getElementById('effect');
             const musicInput = document.getElementById('music');
+            const enablePhotoCheckbox = document.getElementById('enablePhoto');
             const generateBtn = document.getElementById('generateLink');
             const linkContainer = document.getElementById('linkContainer');
             const generatedLinkInput = document.getElementById('generatedLink');
@@ -450,7 +483,7 @@
             const cameraHint = document.getElementById('cameraHint');
             const cameraErrorDiv = document.getElementById('cameraError');
             const audioContainer = document.getElementById('audioContainer');
-            const backToCreatorBtn = document.getElementById('backToCreatorBtn');
+            const backToCreatorBtn = document.getElementById('backToCreatorBtn'); 
             // Новые элементы
             const previewScreen = document.getElementById('previewScreen');
             const viewCardBtn = document.getElementById('viewCardBtn');
@@ -459,6 +492,7 @@
             let currentStream = null;
             let effectParam = 'confetti';
             let musicParam = '';
+            let photoEnabledParam = true; // по умолчанию включено
             let effectInterval = null;   // для постоянного эффекта
             let autoPhotoTaken = false;  // флаг для предотвращения двойного автоснимка
 
@@ -474,7 +508,8 @@
                 return {
                     message: message,
                     effect: params.get('effect') || 'confetti',
-                    music: params.get('music') || ''
+                    music: params.get('music') || '',
+                    photo: params.get('photo') !== 'false' // по умолчанию true, false только если явно указано photo=false
                 };
             }
 
@@ -673,6 +708,34 @@
                 }
             }
 
+            // --- Функция для показа открытки без фото (когда снимок отключен) ---
+            function showCardWithoutPhoto() {
+                // Скрываем все связанные с камерой элементы
+                photoSection.style.display = 'none';
+                cameraHint.style.display = 'none';
+                cameraErrorDiv.style.display = 'none';
+                previewScreen.style.display = 'none';
+                
+                // Показываем сообщение об отключенном снимке
+                cardMessageDiv.style.display = 'block';
+                backToCreatorBtn.style.display = 'inline-block';
+
+                // Если есть музыка, создаём аудио и пытаемся воспроизвести
+                if (musicParam) {
+                    audioContainer.innerHTML = '';
+                    const audio = document.createElement('audio');
+                    audio.controls = true;
+                    audio.preload = 'auto';
+                    audio.src = musicParam;
+                    audioContainer.appendChild(audio);
+                    audioContainer.style.display = 'block';
+                    tryAutoplayAudio(audio);
+                }
+
+                // Запускаем постоянный эффект
+                startContinuousEffect(effectParam);
+            }
+
             // --- Функция для попытки автозапуска аудио с отложенным запуском по клику ---
             function tryAutoplayAudio(audioElement) {
                 if (!audioElement) return;
@@ -706,18 +769,20 @@
                 const params = getUrlParams();
                 cardMessageDiv.textContent = params.message || 'Поздравляю!';
                 effectParam = params.effect;
-                musicParam = params.music; // просто сохраняем ссылку
+                musicParam = params.music;
+                photoEnabledParam = params.photo; // true или false
 
                 // Очищаем контейнер аудио (на случай, если были предыдущие)
                 audioContainer.innerHTML = '';
                 audioContainer.style.display = 'none';
 
-                // Скрываем все элементы, кроме previewScreen
+                // Скрываем все элементы
                 photoSection.style.display = 'none';
                 cardMessageDiv.style.display = 'none';
                 cameraHint.style.display = 'none';
                 cameraErrorDiv.style.display = 'none';
                 previewScreen.style.display = 'flex'; // показываем кнопку
+                
                 // Кнопка "Сделать открытку" скрыта до показа результата
                 backToCreatorBtn.style.display = 'none';
 
@@ -728,13 +793,19 @@
 
             // --- Обработчик нажатия "Посмотреть" ---
             async function onViewCard() {
-                // Скрываем previewScreen (он исчезнет, но мы покажем подсказки камеры)
+                // Скрываем previewScreen
                 previewScreen.style.display = 'none';
-                // Запускаем камеру
-                await startCamera();
-                // Если камера запустилась без ошибок, ждём готовности и делаем снимок
-                if (cameraErrorDiv.style.display !== 'block') {
-                    waitForVideoAndTakePhoto();
+                
+                if (photoEnabledParam) {
+                    // Если снимок включен - запускаем камеру и делаем фото
+                    await startCamera();
+                    // Если камера запустилась без ошибок, ждём готовности и делаем снимок
+                    if (cameraErrorDiv.style.display !== 'block') {
+                        waitForVideoAndTakePhoto();
+                    }
+                } else {
+                    // Если снимок отключен - показываем открытку без фото
+                    showCardWithoutPhoto();
                 }
             }
 
@@ -743,6 +814,7 @@
                 const message = messageInput.value.trim();
                 const effect = effectSelect.value;
                 const music = musicInput.value.trim();
+                const photoEnabled = enablePhotoCheckbox.checked;
 
                 // Дополнительная проверка на пустое сообщение
                 if (!message) {
@@ -754,6 +826,10 @@
                 if (message) params.set('message', message);
                 params.set('effect', effect);
                 if (music) params.set('music', music);
+                // Добавляем параметр photo только если он выключен (по умолчанию true)
+                if (!photoEnabled) {
+                    params.set('photo', 'false');
+                }
 
                 const url = window.location.origin + window.location.pathname + '?' + params.toString();
                 generatedLinkInput.value = url;
@@ -807,7 +883,7 @@
             // --- Инициализация при загрузке ---
             function init() {
                 const params = getUrlParams();
-                if (params.message || params.effect !== 'confetti' || params.music) {
+                if (params.message || params.effect !== 'confetti' || params.music || params.photo !== true) {
                     setMode('card');
                     initCardMode().catch(console.error);
                 } else {
@@ -815,6 +891,7 @@
                     messageInput.value = '';
                     effectSelect.value = 'confetti';
                     musicInput.value = '';
+                    enablePhotoCheckbox.checked = true; // по умолчанию включено
                     linkContainer.style.display = 'none';
                     goToCardBtn.style.display = 'none';
                     // Обновляем состояние кнопки (она будет disabled, так как поле пустое)

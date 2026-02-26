@@ -1,6 +1,6 @@
 // clown-nose.js
 (function (global) {
-  const MODELS_URL = '/models'; // путь к папке с моделями (можно изменить)
+  const MODELS_URL = './models'; // путь к папке с моделями
 
   let modelsLoaded = false;
   let modelsLoadingPromise = null;

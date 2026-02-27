@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Вам открытка</title>
     <!-- canvas-confetti с CDN -->
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1"></script>
@@ -233,6 +233,19 @@
             word-break: break-word;
             display: none;
         }
+        .minimal-message {
+            background: transparent;
+            padding: 8px 12px;
+            border-radius: 12px;
+            font-size: 1rem;
+            text-align: center;
+            color: #5a3e28;
+            display: none;
+            font-style: normal;
+            opacity: 0.9;
+            white-space: pre-wrap;
+        }
+
         .error-message {
             color: #b34a4a;
             background: #ffe2e2;
@@ -267,20 +280,24 @@
             color: #8b7355;
             font-size: 0.9rem;
         }
+        /* Исправление: эмоджи в два ряда */
         .emoji-panel {
-            display: flex;
-            flex-wrap: nowrap;
-            overflow-x: auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(60px, auto));
             gap: 8px;
             padding: 10px 0;
             margin-top: 5px;
             margin-bottom: 5px;
-            -webkit-overflow-scrolling: touch;
+            max-height: 200px;
+            overflow-y: auto;
+            background: rgba(242, 230, 216, 0.3);
+            border-radius: 20px;
+            padding: 15px;
             scrollbar-width: thin;
             scrollbar-color: #c89f6e #f2e6d8;
         }
         .emoji-panel::-webkit-scrollbar {
-            height: 6px;
+            width: 6px;
         }
         .emoji-panel::-webkit-scrollbar-track {
             background: #f2e6d8;
@@ -294,17 +311,20 @@
             background: #fff;
             border: none;
             font-size: 1.8rem;
-            padding: 8px 12px;
+            padding: 8px 5px;
             border-radius: 30px;
             cursor: pointer;
             box-shadow: 0 2px 6px rgba(0,0,0,0.1);
             transition: 0.2s;
             line-height: 1;
-            flex-shrink: 0;
+            aspect-ratio: 1/1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         .emoji-btn:hover {
             background: #ffe9ce;
-            transform: scale(1.1);
+            transform: scale(1.05);
         }
         .preview-screen {
             display: flex;
@@ -365,6 +385,10 @@
                 transform: rotate(360deg);
             }
         }
+        /* Стили для сохранения переносов строк */
+        .preserve-lines {
+            white-space: pre-wrap;
+        }
     </style>
 </head>
 <body>
@@ -372,10 +396,16 @@
         <!-- Режим создания открытки -->
         <div class="creator-panel">
             <h1>✨ Создай свою открытку ✨</h1>
-            <label for="message">Поздравление</label>
-            <textarea id="message" placeholder="Например: С днём рождения! Желаю счастья..."></textarea>
-            
-            <!-- Панель с большим количеством эмодзи (горизонтальная прокрутка) -->
+
+            <!-- Заголовок -->
+            <label for="title">Заголовок</label>
+            <textarea id="title" placeholder="Например: С днём рождения!" class="preserve-lines"></textarea>
+
+            <!-- Тело сообщения -->
+            <label for="bodyMessage">Сообщение</label>
+            <textarea id="bodyMessage" placeholder="Например: Пусть все мечты сбываются!" class="preserve-lines"></textarea>
+
+            <!-- Панель с эмодзи в два ряда (grid автоматически делает два ряда и более) -->
             <div class="emoji-panel" id="emojiPanel">
                 <!-- Смайлики и эмоции -->
                 <button class="emoji-btn" data-emoji="😊">😊</button>
@@ -492,7 +522,7 @@
             <label for="music">Ссылка на песню (необязательно)</label>
             <input type="url" id="music" placeholder="https://example.com/song.mp3">
 
-            <button class="btn" id="generateLink" disabled>🔗 Создать открытку</button>
+            <button class="btn" id="generateLink">🔗 Создать открытку</button>
 
             <div class="link-area" id="linkContainer" style="display: none;">
                 <input type="text" id="generatedLink" readonly>
@@ -505,7 +535,12 @@
         <!-- Режим просмотра открытки -->
         <div class="card-panel">
             <h2>💌 Вам открытка</h2>
-            <div class="message-display" id="cardMessage"></div>
+
+            <!-- Заголовок с сохранением переносов строк -->
+            <div class="message-display preserve-lines" id="cardTitle"></div>
+
+            <!-- Сообщение под заголовком с сохранением переносов строк -->
+            <div class="minimal-message preserve-lines" id="cardBodyMessage"></div>
 
             <!-- Экран с кнопкой "Посмотреть" (показывается первым) -->
             <div class="preview-screen" id="previewScreen">
@@ -543,7 +578,8 @@
             const cardPanel = document.querySelector('.card-panel');
 
             // Элементы режима создания
-            const messageInput = document.getElementById('message');
+            const titleInput = document.getElementById('title');        // заголовок
+            const bodyMessageInput = document.getElementById('bodyMessage'); // сообщение
             const effectSelect = document.getElementById('effect');
             const musicInput = document.getElementById('music');
             const enablePhotoCheckbox = document.getElementById('enablePhoto');
@@ -556,7 +592,8 @@
             const goToCardBtn = document.getElementById('goToCardFromCreator');
 
             // Элементы режима открытки
-            const cardMessageDiv = document.getElementById('cardMessage');
+            const cardTitleDiv = document.getElementById('cardTitle');
+            const cardBodyDiv = document.getElementById('cardBodyMessage');
             const video = document.getElementById('video');
             const photoSection = document.getElementById('photoSection');
             const photoCanvas = document.getElementById('photoCanvas');
@@ -564,7 +601,7 @@
             const cameraErrorDiv = document.getElementById('cameraError');
             const audioContainer = document.getElementById('audioContainer');
             const backToCreatorBtn = document.getElementById('backToCreatorBtn');
-            
+
             // Новые элементы
             const previewScreen = document.getElementById('previewScreen');
             const viewCardBtn = document.getElementById('viewCardBtn');
@@ -578,6 +615,46 @@
             let effectInterval = null;
             let autoPhotoTaken = false;
 
+            // для вставки emoji — хранит элемент, куда вставлять (последний фокус)
+            let lastFocusedField = titleInput;
+
+            // --- Сохранение введенных данных в localStorage ---
+            function saveFormData() {
+                const formData = {
+                    title: titleInput.value,
+                    bodyMessage: bodyMessageInput.value,
+                    effect: effectSelect.value,
+                    music: musicInput.value,
+                    enablePhoto: enablePhotoCheckbox.checked,
+                    clownNose: clownNoseCheckbox.checked
+                };
+                localStorage.setItem('cardFormData', JSON.stringify(formData));
+            }
+
+            // --- Загрузка сохраненных данных из localStorage ---
+            function loadFormData() {
+                const savedData = localStorage.getItem('cardFormData');
+                if (savedData) {
+                    try {
+                        const formData = JSON.parse(savedData);
+                        titleInput.value = formData.title || '';
+                        bodyMessageInput.value = formData.bodyMessage || '';
+                        effectSelect.value = formData.effect || 'confetti';
+                        musicInput.value = formData.music || '';
+                        enablePhotoCheckbox.checked = formData.enablePhoto !== undefined ? formData.enablePhoto : true;
+                        clownNoseCheckbox.checked = formData.clownNose !== undefined ? formData.clownNose : true;
+                        
+                        // Обновляем видимость вложенных опций
+                        togglePhotoOptions(enablePhotoCheckbox.checked);
+                        
+                        // Обновляем состояние кнопки
+                        updateGenerateButtonState();
+                    } catch (e) {
+                        console.error('Ошибка загрузки сохраненных данных', e);
+                    }
+                }
+            }
+
             // --- Управление видимостью вложенных опций ---
             function togglePhotoOptions(visible) {
                 if (visible) {
@@ -590,14 +667,18 @@
             // --- Чтение параметров URL ---
             function getUrlParams() {
                 const params = new URLSearchParams(window.location.search);
+                let title = params.get('title');
                 let message = params.get('message');
-                if (message) {
-                    message = message.replace(/\+/g, ' ');
-                } else {
+
+                if (!title && message) {
+                    // старый формат: treat message as title, body empty
+                    title = message;
                     message = '';
                 }
+
                 return {
-                    message: message,
+                    title: title || '',
+                    message: message || '',
                     effect: params.get('effect') || 'confetti',
                     music: params.get('music') || '',
                     photo: params.get('photo') !== 'false',
@@ -680,7 +761,7 @@
                 }
             }
 
-            // --- Захват фото и отображение открытки (сразу, без ожидания носа) ---
+            // --- Захват фото и отображение открытки ---
             async function takePhoto() {
                 if (!video.videoWidth) return;
 
@@ -693,7 +774,12 @@
                 // Показываем фото и скрываем предпросмотр
                 photoSection.style.display = 'block';
                 previewScreen.style.display = 'none';
-                cardMessageDiv.style.display = 'block';
+                cardTitleDiv.style.display = 'block';
+                if (cardBodyDiv.textContent && cardBodyDiv.textContent.trim() !== '') {
+                    cardBodyDiv.style.display = 'block';
+                } else {
+                    cardBodyDiv.style.display = 'none';
+                }
                 backToCreatorBtn.style.display = 'inline-block';
 
                 // Если есть музыка, создаём аудио
@@ -716,7 +802,6 @@
 
                 // Если опция клоунского носа включена – запускаем асинхронную обработку
                 if (clownNoseParam) {
-
                     try {
                         // Модели должны быть предзагружены, но подстрахуемся
                         await ClownNose.loadModels();
@@ -730,7 +815,6 @@
                         photoCanvas.getContext('2d').drawImage(processedCanvas, 0, 0);
                     } catch (error) {
                         console.error('Ошибка при добавлении клоунского носа:', error);
-                        return; // не скрываем статус сразу
                     }
                 }
             }
@@ -780,7 +864,12 @@
                 cameraHint.style.display = 'none';
                 cameraErrorDiv.style.display = 'none';
                 previewScreen.style.display = 'none';
-                cardMessageDiv.style.display = 'block';
+                cardTitleDiv.style.display = 'block';
+                if (cardBodyDiv.textContent && cardBodyDiv.textContent.trim() !== '') {
+                    cardBodyDiv.style.display = 'block';
+                } else {
+                    cardBodyDiv.style.display = 'none';
+                }
                 backToCreatorBtn.style.display = 'inline-block';
 
                 if (musicParam) {
@@ -828,7 +917,13 @@
             // --- Инициализация карточки ---
             async function initCardMode() {
                 const params = getUrlParams();
-                cardMessageDiv.textContent = params.message || 'Поздравляю!';
+                // title and message now
+                const title = params.title || '';
+                const bodyMsg = params.message || '';
+
+                cardTitleDiv.textContent = title || 'Поздравляю!';
+                cardBodyDiv.textContent = bodyMsg || '';
+
                 effectParam = params.effect;
                 musicParam = params.music;
                 photoEnabledParam = params.photo;
@@ -837,7 +932,8 @@
                 audioContainer.innerHTML = '';
                 audioContainer.style.display = 'none';
                 photoSection.style.display = 'none';
-                cardMessageDiv.style.display = 'none';
+                cardTitleDiv.style.display = 'none';
+                cardBodyDiv.style.display = 'none';
                 cameraHint.style.display = 'none';
                 cameraErrorDiv.style.display = 'none';
                 previewScreen.style.display = 'flex';
@@ -873,18 +969,21 @@
 
             // --- Генерация ссылки ---
             function generateLink() {
-                const message = messageInput.value.trim();
+                const title = titleInput.value.trim();
+                const message = bodyMessageInput.value.trim();
                 const effect = effectSelect.value;
                 const music = musicInput.value.trim();
                 const photoEnabled = enablePhotoCheckbox.checked;
                 const clownNoseEnabled = clownNoseCheckbox.checked;
 
-                if (!message) {
-                    alert('Пожалуйста, введите поздравление');
+                // Проверяем, что хотя бы одно поле заполнено
+                if (title === '' && message === '') {
+                    alert('Введите заголовок или сообщение (хотя бы одно поле).');
                     return;
                 }
 
                 const params = new URLSearchParams();
+                if (title) params.set('title', title);
                 if (message) params.set('message', message);
                 params.set('effect', effect);
                 if (music) params.set('music', music);
@@ -901,11 +1000,15 @@
                 generatedLinkInput.value = url;
                 linkContainer.style.display = 'flex';
                 goToCardBtn.style.display = 'inline-block';
+                
+                // Сохраняем данные после генерации ссылки
+                saveFormData();
             }
 
             function updateGenerateButtonState() {
-                const message = messageInput.value.trim();
-                generateBtn.disabled = message === '';
+                const title = titleInput.value.trim();
+                const message = bodyMessageInput.value.trim();
+                generateBtn.disabled = (title === '' && message === '');
             }
 
             function copyLink() {
@@ -929,36 +1032,70 @@
                 window.location.href = window.location.origin + window.location.pathname;
             }
 
-            function insertEmoji(emoji) {
-                const start = messageInput.selectionStart;
-                const end = messageInput.selectionEnd;
-                const text = messageInput.value;
+            // вставка emoji в последнее сфокусированное поле
+            function insertEmojiIntoField(field, emoji) {
+                // поле — textarea/input
+                if (!field) return;
+                const start = field.selectionStart ?? field.value.length;
+                const end = field.selectionEnd ?? field.value.length;
+                const text = field.value;
                 const newText = text.substring(0, start) + emoji + text.substring(end);
-                messageInput.value = newText;
+                field.value = newText;
+                // обновляем кнопку состояния
                 updateGenerateButtonState();
-                messageInput.selectionStart = messageInput.selectionEnd = start + emoji.length;
-                messageInput.focus();
+                // устанавливаем курсор после вставленного эмодзи
+                const pos = start + emoji.length;
+                field.selectionStart = field.selectionEnd = pos;
+                field.focus();
+                
+                // Сохраняем данные после вставки эмодзи
+                saveFormData();
+            }
+
+            function insertEmoji(emoji) {
+                // вставляем в lastFocusedField, если он доступен и является input/textarea
+                const field = lastFocusedField && (lastFocusedField.tagName === 'TEXTAREA' || lastFocusedField.tagName === 'INPUT')
+                    ? lastFocusedField
+                    : titleInput;
+                insertEmojiIntoField(field, emoji);
+            }
+
+            // --- Проверка наличия параметров в URL ---
+            function hasUrlParams() {
+                return window.location.search.length > 0;
             }
 
             // --- Инициализация при загрузке ---
             function init() {
                 const params = getUrlParams();
-                if (params.message || params.effect !== 'confetti' || params.music || params.photo !== true || params.clownNose !== true) {
+                
+                // Проверяем, есть ли параметры в URL
+                if (hasUrlParams()) {
                     setMode('card');
                     initCardMode().catch(console.error);
                 } else {
                     setMode('creator');
-                    messageInput.value = '';
-                    effectSelect.value = 'confetti';
-                    musicInput.value = '';
-                    enablePhotoCheckbox.checked = true;
-                    clownNoseCheckbox.checked = true;
-                    togglePhotoOptions(true);
+                    loadFormData();
                     linkContainer.style.display = 'none';
                     goToCardBtn.style.display = 'none';
-                    updateGenerateButtonState();
+                    
+                    // Принудительно обновляем состояние кнопки после загрузки
+                    setTimeout(updateGenerateButtonState, 100); // Небольшая задержка для надежности
                 }
 
+                // Обработчик для восстановления состояния при возврате через "Назад"
+                window.addEventListener('pageshow', function(event) {
+                    // Проверяем, что мы в режиме создания и нет параметров в URL
+                    if (!hasUrlParams() && body.classList.contains('mode-creator')) {
+                        // Небольшая задержка, чтобы браузер успел восстановить значения полей
+                        setTimeout(() => {
+                            console.log('pageshow: обновляем состояние кнопки');
+                            updateGenerateButtonState();
+                        }, 50);
+                    }
+                });
+
+                // emoji buttons — вставляют в последнее сфокусированное поле
                 document.querySelectorAll('.emoji-btn').forEach(btn => {
                     btn.addEventListener('click', () => {
                         const emoji = btn.getAttribute('data-emoji');
@@ -966,11 +1103,35 @@
                     });
                 });
 
-                messageInput.addEventListener('input', updateGenerateButtonState);
+                // отслеживаем фокус для выбора поля вставки emoji
+                titleInput.addEventListener('focus', () => { lastFocusedField = titleInput; });
+                bodyMessageInput.addEventListener('focus', () => { lastFocusedField = bodyMessageInput; });
+
+                // также отслеживаем клики по полям
+                titleInput.addEventListener('click', () => { lastFocusedField = titleInput; });
+                bodyMessageInput.addEventListener('click', () => { lastFocusedField = bodyMessageInput; });
+
+                // обновление состояния кнопки при вводе в любом поле и сохранение
+                titleInput.addEventListener('input', function() {
+                    updateGenerateButtonState();
+                    saveFormData();
+                });
+                bodyMessageInput.addEventListener('input', function() {
+                    updateGenerateButtonState();
+                    saveFormData();
+                });
                 
+                musicInput.addEventListener('input', saveFormData);
+                effectSelect.addEventListener('change', saveFormData);
+
                 enablePhotoCheckbox.addEventListener('change', function(e) {
                     togglePhotoOptions(e.target.checked);
+                    saveFormData();
                 });
+                
+                clownNoseCheckbox.addEventListener('change', saveFormData);
+
+                updateGenerateButtonState();
             }
 
             // --- События ---
@@ -985,6 +1146,8 @@
             window.addEventListener('beforeunload', function() {
                 stopEffect();
                 stopCamera();
+                // Сохраняем данные при уходе со страницы
+                saveFormData();
             });
         })();
     </script>

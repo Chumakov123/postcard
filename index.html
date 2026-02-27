@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes"/>
     <title>Вам открытка</title>
     <!-- canvas-confetti с CDN -->
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1"></script>
@@ -24,36 +24,37 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 20px;
+            padding: 12px;
+            position: relative;
         }
         .card {
             max-width: 700px;
             width: 100%;
-            background: rgba(255, 255, 255, 0.8);
+            background: rgba(255, 255, 255, 0.85);
             backdrop-filter: blur(8px);
-            border-radius: 40px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.2), 0 4px 12px rgba(0,0,0,0.1);
-            padding: 30px 25px;
+            border-radius: 32px;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.15), 0 4px 8px rgba(0,0,0,0.05);
+            padding: 20px 18px;
             transition: all 0.2s;
-            margin-bottom: 30px; /* Добавил отступ снизу, чтобы контент не прилипал к футеру */
+            margin-bottom: 20px;
         }
         h1, h2 {
             font-weight: 500;
             color: #4a2f1a;
             text-align: center;
-            margin-bottom: 20px;
+            margin-bottom: 16px;
         }
         h1 {
-            font-size: 2.2rem;
+            font-size: 1.9rem;
             letter-spacing: -0.5px;
         }
         h2 {
-            font-size: 1.8rem;
+            font-size: 1.6rem;
         }
         .creator-panel, .card-panel {
             display: none;
             flex-direction: column;
-            gap: 20px;
+            gap: 16px;
         }
         body.mode-creator .creator-panel {
             display: flex;
@@ -65,34 +66,34 @@
         label {
             font-weight: 600;
             color: #5a3e28;
-            margin-bottom: 5px;
-            font-size: 0.95rem;
+            margin-bottom: 4px;
+            font-size: 0.9rem;
         }
         input, textarea, select {
             width: 100%;
-            padding: 14px 18px;
+            padding: 12px 16px;
             border: 2px solid transparent;
-            border-radius: 30px;
-            font-size: 1rem;
+            border-radius: 28px;
+            font-size: 0.95rem;
             background: white;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.03);
             transition: 0.2s;
             font-family: inherit;
         }
         input:focus, textarea:focus, select:focus {
             outline: none;
             border-color: #c89f6e;
-            box-shadow: 0 8px 12px rgba(200, 159, 110, 0.2);
+            box-shadow: 0 8px 12px rgba(200, 159, 110, 0.15);
         }
         textarea {
-            min-height: 100px;
+            min-height: 90px;
             resize: vertical;
         }
         .checkbox-wrapper {
             display: flex;
             align-items: center;
             gap: 10px;
-            padding: 10px 0;
+            padding: 8px 0;
         }
         .checkbox-wrapper input[type="checkbox"] {
             width: 20px;
@@ -108,9 +109,9 @@
         
         /* Стили для вложенных опций */
         .nested-options {
-            margin-left: 30px;
-            padding: 10px 15px;
-            background: rgba(200, 159, 110, 0.1);
+            margin-left: 24px;
+            padding: 8px 12px;
+            background: rgba(200, 159, 110, 0.08);
             border-radius: 20px;
             border-left: 3px solid #c89f6e;
             display: none;
@@ -131,7 +132,7 @@
         .nested-checkbox label {
             margin: 0;
             font-weight: normal;
-            font-size: 0.95rem;
+            font-size: 0.9rem;
             color: #5a3e28;
         }
         
@@ -139,13 +140,13 @@
             background: #c89f6e;
             color: white;
             border: none;
-            padding: 14px 24px;
+            padding: 12px 20px;
             border-radius: 40px;
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s;
-            box-shadow: 0 8px 16px rgba(200, 159, 110, 0.3);
+            box-shadow: 0 6px 12px rgba(200, 159, 110, 0.25);
             border: 1px solid rgba(255,255,255,0.3);
             width: fit-content;
             margin: 0 auto;
@@ -153,7 +154,7 @@
         .btn:hover {
             background: #b48b5a;
             transform: scale(1.02);
-            box-shadow: 0 12px 20px rgba(180, 139, 90, 0.4);
+            box-shadow: 0 10px 16px rgba(180, 139, 90, 0.3);
         }
         .btn:disabled {
             background: #d9b999;
@@ -165,7 +166,7 @@
         .btn.secondary {
             background: #e6d5b8;
             color: #4a2f1a;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
         }
         .btn.secondary:hover {
             background: #dac29c;
@@ -177,42 +178,43 @@
 
         .link-area {
             background: #f2e6d8;
-            padding: 15px;
+            padding: 12px;
             border-radius: 30px;
             display: flex;
-            gap: 10px;
+            gap: 8px;
             align-items: center;
             flex-wrap: wrap;
         }
         .link-area input {
             flex: 1;
             background: white;
-            padding: 12px 16px;
+            padding: 10px 14px;
             border-radius: 40px;
             border: 1px solid #ddd;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
         }
         .small-btn {
             background: #c89f6e;
             border: none;
             color: white;
-            padding: 12px 20px;
+            padding: 10px 16px;
             border-radius: 40px;
             font-weight: 600;
             cursor: pointer;
             white-space: nowrap;
+            font-size: 0.9rem;
         }
 
         .video-section {
-            display: none; /* полностью скрываем видео, оно нужно только для захвата */
+            display: none;
         }
         .photo-section {
             position: relative;
             width: 100%;
-            border-radius: 30px;
+            border-radius: 28px;
             overflow: hidden;
             background: #2d2d2d;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.15);
             margin-bottom: 10px;
         }
         video, canvas {
@@ -225,21 +227,21 @@
         }
         .message-display {
             background: #fff5e6;
-            padding: 20px;
-            border-radius: 30px;
-            font-size: 1.4rem;
+            padding: 16px;
+            border-radius: 28px;
+            font-size: 1.3rem;
             text-align: center;
             font-style: italic;
             color: #3b2c1c;
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.03);
             word-break: break-word;
             display: none;
         }
         .minimal-message {
             background: transparent;
-            padding: 8px 12px;
+            padding: 8px 10px;
             border-radius: 12px;
-            font-size: 1rem;
+            font-size: 0.95rem;
             text-align: center;
             color: #5a3e28;
             display: none;
@@ -251,55 +253,57 @@
         .error-message {
             color: #b34a4a;
             background: #ffe2e2;
-            padding: 15px;
-            border-radius: 30px;
+            padding: 12px;
+            border-radius: 28px;
             text-align: center;
             font-weight: 500;
             display: none;
+            font-size: 0.9rem;
         }
         .hint-message {
             color: #8b7355;
             background: #fff0d4;
-            padding: 15px;
-            border-radius: 30px;
+            padding: 12px;
+            border-radius: 28px;
             text-align: center;
             font-weight: 500;
             margin-bottom: 10px;
+            font-size: 0.9rem;
         }
         audio {
             width: 100%;
             border-radius: 30px;
-            margin-top: 10px;
+            margin-top: 8px;
         }
         .btn-group {
             display: flex;
             flex-wrap: wrap;
-            gap: 15px;
+            gap: 12px;
             justify-content: center;
         }
         .footer-note {
             text-align: center;
             color: #8b7355;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
         }
-        /* Исправление: эмоджи в два ряда */
+        
+        /* Компактная сетка эмодзи для мобильных */
         .emoji-panel {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(60px, auto));
-            gap: 8px;
-            padding: 10px 0;
+            grid-template-columns: repeat(auto-fill, minmax(48px, auto));
+            gap: 6px;
+            padding: 12px;
             margin-top: 5px;
             margin-bottom: 5px;
-            max-height: 200px;
+            max-height: 180px;
             overflow-y: auto;
             background: rgba(242, 230, 216, 0.3);
-            border-radius: 20px;
-            padding: 15px;
+            border-radius: 24px;
             scrollbar-width: thin;
             scrollbar-color: #c89f6e #f2e6d8;
         }
         .emoji-panel::-webkit-scrollbar {
-            width: 6px;
+            width: 4px;
         }
         .emoji-panel::-webkit-scrollbar-track {
             background: #f2e6d8;
@@ -312,11 +316,11 @@
         .emoji-btn {
             background: #fff;
             border: none;
-            font-size: 1.8rem;
-            padding: 8px 5px;
-            border-radius: 30px;
+            font-size: 1.5rem;
+            padding: 6px 3px;
+            border-radius: 24px;
             cursor: pointer;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
             transition: 0.2s;
             line-height: 1;
             aspect-ratio: 1/1;
@@ -332,38 +336,37 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 20px;
-            margin: 20px 0;
+            gap: 16px;
+            margin: 16px 0;
         }
         #audioContainer {
             display: none;
         }
-        /* Кнопка "Сделать открытку" скрыта до показа результата */
         #backToCreatorBtn {
             display: none;
         }
         .photo-disabled-message {
             background: #e8f0fe;
             color: #2c3e50;
-            padding: 20px;
-            border-radius: 30px;
+            padding: 16px;
+            border-radius: 28px;
             text-align: center;
-            font-size: 1.1rem;
+            font-size: 1rem;
             border: 2px dashed #c89f6e;
             margin-bottom: 10px;
             display: none;
         }
-        /* Стили для статуса обработки (как в первом проекте) */
         .status {
-            margin: 10px 0;
-            padding: 10px;
+            margin: 8px 0;
+            padding: 8px;
             border-radius: 5px;
             background-color: #f0f0f0;
             color: #666;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 8px;
+            gap: 6px;
+            font-size: 0.9rem;
         }
         .status.error {
             background-color: #ffe6e6;
@@ -375,8 +378,8 @@
         }
         .spinner {
             display: inline-block;
-            width: 16px;
-            height: 16px;
+            width: 14px;
+            height: 14px;
             border: 2px solid rgba(0, 0, 0, 0.1);
             border-top-color: #ff6b6b;
             border-radius: 50%;
@@ -387,43 +390,41 @@
                 transform: rotate(360deg);
             }
         }
-        /* Стили для сохранения переносов строк */
         .preserve-lines {
             white-space: pre-wrap;
         }
 
-        /* Новые стили для подвала (footer) - теперь он статичный */
         .site-footer {
             width: 100%;
             display: flex;
             justify-content: center;
-            margin-top: auto; /* Помогает прижать футер к низу, если контента мало, но с учетом padding на body */
+            margin-top: auto;
         }
 
         .footer-content {
             background: rgba(255, 255, 255, 0.7);
             backdrop-filter: blur(8px);
-            padding: 10px 20px;
+            padding: 8px 16px;
             border-radius: 40px;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-            font-size: 0.9rem;
+            box-shadow: 0 6px 16px rgba(0,0,0,0.1);
+            font-size: 0.85rem;
             color: #5a3e28;
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
             pointer-events: auto;
             transition: 0.3s;
         }
 
         .footer-content:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 12px 25px rgba(0,0,0,0.2);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.15);
         }
 
         .github-link {
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 5px;
             text-decoration: none;
             color: #4a2f1a;
             font-weight: 600;
@@ -434,9 +435,80 @@
             color: #c89f6e;
             transform: scale(1.05);
         }
+
+        /* Светлый тост для мобильных */
+        .toast-message {
+            position: fixed;
+            top: 16px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-120px);
+            background: rgba(255, 248, 240, 0.98);
+            backdrop-filter: blur(12px);
+            color: #4a2f1a;
+            padding: 12px 20px;
+            border-radius: 40px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            box-shadow: 0 12px 28px rgba(90, 62, 40, 0.15), 0 2px 8px rgba(0,0,0,0.05);
+            z-index: 1000;
+            opacity: 0;
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.25s ease;
+            border: 1px solid rgba(200, 159, 110, 0.3);
+            pointer-events: none;
+            white-space: nowrap;
+            max-width: calc(100% - 32px);
+            width: auto;
+            min-width: 200px;
+            white-space: normal;
+            word-break: break-word;
+            text-align: center;
+            line-height: 1.4;
+            letter-spacing: 0.01em;
+        }
+
+        .toast-message.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        /* Адаптация для совсем маленьких экранов */
+        @media (max-width: 380px) {
+            .card {
+                padding: 16px 14px;
+                border-radius: 28px;
+            }
+            h1 {
+                font-size: 1.6rem;
+            }
+            h2 {
+                font-size: 1.4rem;
+            }
+            .emoji-panel {
+                grid-template-columns: repeat(auto-fill, minmax(42px, auto));
+                gap: 4px;
+                padding: 8px;
+            }
+            .emoji-btn {
+                font-size: 1.3rem;
+                padding: 4px 2px;
+            }
+            .btn {
+                padding: 10px 16px;
+                font-size: 1rem;
+            }
+            .toast-message {
+                top: 12px;
+                padding: 10px 16px;
+                font-size: 0.9rem;
+                min-width: 160px;
+            }
+        }
     </style>
 </head>
 <body>
+    <!-- Всплывающее сообщение (тост) -->
+    <div id="toast" class="toast-message"></div>
+
     <div class="card">
         <!-- Режим создания открытки -->
         <div class="creator-panel">
@@ -621,7 +693,7 @@
                target="_blank"
                rel="noopener noreferrer"
                class="github-link">
-                <svg height="20" viewBox="0 0 16 16" width="20" fill="currentColor">
+                <svg height="18" viewBox="0 0 16 16" width="18" fill="currentColor">
                     <path d="M8 0C3.58 0 0 3.58 0 8a8 8 0 0 0 5.47 7.59c.4.07.55-.17.55-.38
                     0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13
                     -.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66
@@ -641,6 +713,17 @@
 
     <script>
         (function() {
+            // --- Функция для показа всплывающего сообщения ---
+            function showToast(message, duration = 3000) {
+                const toast = document.getElementById('toast');
+                toast.textContent = message;
+                toast.classList.add('show');
+                
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                }, duration);
+            }
+
             // --- Элементы DOM ---
             const body = document.body;
             const creatorPanel = document.querySelector('.creator-panel');
@@ -1047,7 +1130,7 @@
 
                 // Проверяем, что хотя бы одно поле заполнено
                 if (title === '' && message === '') {
-                    alert('Введите заголовок или сообщение (хотя бы одно поле).');
+                    showToast('Введите заголовок или сообщение (хотя бы одно поле).');
                     return;
                 }
 
@@ -1083,9 +1166,9 @@
             function copyLink() {
                 generatedLinkInput.select();
                 navigator.clipboard?.writeText(generatedLinkInput.value).then(() => {
-                    alert('Ссылка скопирована!');
+                    showToast('📋 Скопировано!');
                 }).catch(() => {
-                    alert('Нажмите Ctrl+C');
+                    showToast('Нажмите Ctrl+C для копирования');
                 });
             }
 
